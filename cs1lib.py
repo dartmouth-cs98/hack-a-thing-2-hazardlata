@@ -231,7 +231,6 @@ class CS1Canvas(QWidget):
         key_str= self.get_key_str(event)
 
         self.keys_down.add(key_str)
-        print("key pressed " + key_str)
         if key_str:
             if self.data:
                 self.key_press(key_str, self.data)

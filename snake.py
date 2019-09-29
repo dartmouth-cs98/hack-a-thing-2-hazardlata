@@ -24,6 +24,7 @@ class Snake:
         self.snake = [self.generate_random_coordinate()]                                # array of snake (x, y) coordinates for each block of the snake
         self.direction = None                                                       # x, y where (0, 1) is up, (0, -1) is down, (1, 0) is right, and (0, 1) is left
         self.score = 0
+        self.turns = 0
         self.food = self.spawn_new_food()
 
     #### GAME LOGIC ####
@@ -118,21 +119,25 @@ class Snake:
     def turn_right(self):
         if self.direction != self.left:
             print("Turning right")
+            self.turns += 1
             self.direction = self.right
 
     def turn_left(self):
         if self.direction != self.right:
             print("Turning left")
+            self.turns += 1
             self.direction = self.left
 
     def turn_up(self):
         if self.direction != self.down:
             print("Turning up")
+            self.turns += 1
             self.direction = self.up
 
     def turn_down(self):        # for what
         if self.direction != self.up:
             print("Turning down")
+            self.turns += 1
             self.direction = self.down
 
     #### GRAPHICS ####
