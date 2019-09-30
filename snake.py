@@ -191,5 +191,5 @@ class Snake:
     def display(self):
         start_graphics(self.play, framerate=10, width=self.board_width, height=self.board_height, key_press=self.pressed)
 
-snake = Snake(20, 20, 2000, 2000)
+snake = Snake(20, 20, 1000, 1000)
 snake.display()
