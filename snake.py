@@ -29,9 +29,9 @@ class Snake:
 
     #### GAME LOGIC ####
     # checks for collisions
-    def check_collision(self):
+    def check_collision(self, head=self.snake[0]):
         # get coordinates of snake head
-        head_x, head_y = self.snake[0]
+        head_x, head_y = head
 
         # checks out-of-bounds snake (no-wrapping around screen)
         if head_x < -1 or head_x >= self.width or head_y < -1 or head_y >= self.height:
@@ -47,8 +47,8 @@ class Snake:
 
     # generates random location for food
     def generate_random_coordinate(self):
-        rand_x = randint(0, self.width - 1)
-        rand_y = randint(0, self.height - 1)
+        rand_x = randint(1, self.width - 1)
+        rand_y = randint(1, self.height - 1)
 
         return (rand_x, rand_y)
 
