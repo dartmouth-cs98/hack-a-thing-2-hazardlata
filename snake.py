@@ -29,8 +29,9 @@ class Snake:
 
     #### GAME LOGIC ####
     # checks for collisions
-    def check_collision(self, head=self.snake[0]):
+    def check_collision(self):
         # get coordinates of snake head
+        head=self.snake[0]
         head_x, head_y = head
 
         # checks out-of-bounds snake (no-wrapping around screen)
@@ -193,3 +194,74 @@ class Snake:
 
 snake = Snake(20, 20, 1000, 1000)
 snake.display()
+
+def run(num_games):
+    agent = DQNAgent()
+    counter_games = 0
+    score_plot = []
+    counter_plot =[]
+    record = 0
+    while counter_games < num_games:
+        # Initialize classes
+        game = Snake(20, 20, 1000, 1000)
+
+        # Perform first move
+        while not game.end:
+            #agent.epsilon is set to give randomness to actions
+            agent.epsilon = 80 - counter_games
+
+            #get old state
+            state_old = agent.get_state(game)
+
+            #perform random actions based on agent.epsilon, or choose the action
+            if randint(0, 200) < agent.epsilon:
+                final_move = to_categorical(randint(0, 3), num_classes=4)
+            else:
+                # predict action based on the old state
+                prediction = agent.model.predict(state_old.reshape((1,11)))
+                final_move = to_categorical(np.argmax(prediction[0]), num_classes=4)
+
+            ####
+            # if the snake ate, elongate him/her and spawn new food
+            if game.snake_ate():
+                game.score += 1
+                game.snake.insert(0, game.food)
+                game.food = game.spawn_new_food()
+            # if not, just move the snake around
+            else:
+                # calculate where new head will be
+                new_head_coordinates = game.add_vectors(game.snake[0], game.direction)
+
+                # insert new head_coordinates into beginning of list
+                game.snake.insert(0, new_head_coordinates)
+
+                # pop tail
+                game.snake.pop()
+
+                if game.check_collision():
+                    game.start = False
+                    game.end = True
+            ####
+
+            #perform new move and get new state
+            state_new = agent.get_state(game)
+
+            #set treward for the new state
+            reward = agent.set_reward(game, game.end)
+
+            #train short memory base on the new action and state
+            agent.train_short_memory(state_old, final_move, reward, state_new, game.end)
+
+            # store the new data into a long term memory
+            agent.remember(state_old, final_move, reward, state_new, game.end)
+            record = get_record(game.score, record)
+
+        agent.replay_new(agent.memory)
+        counter_games += 1
+        print('Game', counter_games, '      Score:', game.score)
+        score_plot.append(game.score)
+        counter_plot.append(counter_games)
+    agent.model.save_weights('weights.hdf5')
+    plot_seaborn(counter_plot, score_plot)
+
+run(150)
