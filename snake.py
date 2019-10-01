@@ -26,7 +26,7 @@ class Snake:
 
         # snake components
         self.snake = [self.generate_random_coordinate()]                                # array of snake (x, y) coordinates for each block of the snake
-        self.direction = None                                                       # x, y where (0, 1) is up, (0, -1) is down, (1, 0) is right, and (0, 1) is left
+        self.direction = (0, -1)                                                     # x, y where (0, -1) is up, (0, 1) is down, (1, 0) is right, and (0, 1) is left
         self.directions = [(0, 1), (0, -1), (1, 0), (0, 1)]
         self.score = 0
         self.turns = 0
@@ -34,9 +34,13 @@ class Snake:
 
     #### GAME LOGIC ####
     # checks for collisions
-    def check_collision(self, head=self.snake[0]):
+    def check_collision(self, location=None):
         # get coordinates of snake head
-        head_x, head_y = head
+        if location is not None:
+            head_x, head_y = location
+        else:
+            head = self.snake[0]
+            head_x, head_y = head
 
         # checks out-of-bounds snake (no-wrapping around screen)
         if head_x < -1 or head_x >= self.width or head_y < -1 or head_y >= self.height:
@@ -194,7 +198,7 @@ class Snake:
 
             # only updates once game is ready to be played
             if self.start:
-                self.update(False)
+                self.update(False, False)
 
     # displays everything
     def display(self):
@@ -231,7 +235,7 @@ def run(num_games):
                 final_move = randint(0, 3)
             else:
                 # predict action based on the old state
-                prediction = agent.model.predict(state_old.reshape((1,8)))
+                prediction = agent.model.predict(state_old.reshape((1,11)))
                 final_move = np.argmax(prediction[0])
 
             #perform new move and get new state
@@ -256,4 +260,6 @@ def run(num_games):
     agent.model.save_weights('weights.hdf5')
     plot_seaborn(counter_plot, score_plot)
 
-run(10)
+run(150)
+# snake = Snake(20, 20, 1000, 1000)
+# snake.display()

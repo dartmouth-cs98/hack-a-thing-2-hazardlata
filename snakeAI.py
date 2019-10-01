@@ -24,12 +24,26 @@ class SnakeAgent(object):
         self.actual = []
         self.memory = []
 
+    def add_vectors(self, v1, v2):
+        x1, y1 = v1
+        x2, y2 = v2
+        return (x1 + x2, y1 + y2)
+
     def get_state(self, game):
         head = game.snake[0]
         head_x, head_y = head
-        left = (head_x - 1, head_y)
-        right = (head_x + 1, head_y)
-        straight = (head_x, head_y + self.game.direction)
+
+        options = {
+            (-1, 0): ((0, -1), (-1, 0), (0, 1)),
+            (1, 0): ((0, 1), (1, 0), (0, -1)),
+            (0, -1): ((1, 0), (0, -1), (-1, 0)),
+            (0, 1): ((-1, 0), (0, 1), (1, 0)),
+        }
+
+        left, right, straight = options[game.direction]
+        left = (head_x + left[0], head_y + left[1])
+        right = (head_x + right[0], head_y + right[1])
+        straight = (head_x + straight[0], head_y + straight[1])
 
         state = [
             game.check_collision(left),
@@ -66,7 +80,7 @@ class SnakeAgent(object):
 
     def network(self, weights=None):
         model = Sequential()
-        model.add(Dense(output_dim=120, activation='relu', input_dim=8))
+        model.add(Dense(output_dim=120, activation='relu', input_dim=11))
         model.add(Dropout(0.15))
         model.add(Dense(output_dim=120, activation='relu'))
         model.add(Dropout(0.15))
@@ -99,7 +113,7 @@ class SnakeAgent(object):
     def train_short_memory(self, state, action, reward, next_state, done):
         target = reward
         if not done:
-            target = reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1, 8)))[0])
-        target_f = self.model.predict(state.reshape((1, 8)))
+            target = reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1, 11)))[0])
+        target_f = self.model.predict(state.reshape((1, 11)))
         target_f[0][np.argmax(action)] = target
-        self.model.fit(state.reshape((1, 8)), target_f, epochs=1, verbose=0)
+        self.model.fit(state.reshape((1, 11)), target_f, epochs=1, verbose=0)
