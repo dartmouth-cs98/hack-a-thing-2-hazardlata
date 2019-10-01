@@ -34,9 +34,8 @@ class Snake:
 
     #### GAME LOGIC ####
     # checks for collisions
-    def check_collision(self):
+    def check_collision(self, head=self.snake[0]):
         # get coordinates of snake head
-        head=self.snake[0]
         head_x, head_y = head
 
         # checks out-of-bounds snake (no-wrapping around screen)
@@ -201,8 +200,6 @@ class Snake:
     def display(self):
         start_graphics(self.play, framerate=10, width=self.board_width, height=self.board_height, key_press=self.pressed)
 
-# snake = Snake(20, 20, 1000, 1000)
-# snake.display()
 
 def plot_seaborn(array_counter, array_score):
     sns.set(color_codes=True)
@@ -229,7 +226,7 @@ def run(num_games):
             #get old state
             state_old = agent.get_state(game)
 
-            #perform random actions based on agent.epsilon, or choose the action
+            # perform random actions based on agent.epsilon, or choose the action
             if randint(0, 200) < agent.epsilon:
                 final_move = randint(0, 3)
             else:
@@ -260,5 +257,3 @@ def run(num_games):
     plot_seaborn(counter_plot, score_plot)
 
 run(10)
-# snake = Snake(20, 20, 600, 600)
-# snake.display()

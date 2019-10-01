@@ -2,11 +2,11 @@
 from keras.optimizers import Adam
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout
+# from keras.layers import Dense, Dropout
 import random
 import numpy as np
 import pandas as pd
 from operator import add
-
 
 class SnakeAgent(object):
 
@@ -27,38 +27,25 @@ class SnakeAgent(object):
     def get_state(self, game):
         head = game.snake[0]
         head_x, head_y = head
+        left = (head_x - 1, head_y)
+        right = (head_x + 1, head_y)
+        straight = (head_x, head_y + self.game.direction)
 
         state = [
-            # (player.x_change == 20 and player.y_change == 0 and ((list(map(add, player.position[-1], [20, 0])) in player.position) or
-            # player.position[-1][0] + 20 >= (game.game_width - 20))) or (player.x_change == -20 and player.y_change == 0 and ((list(map(add, player.position[-1], [-20, 0])) in player.position) or
-            # player.position[-1][0] - 20 < 20)) or (player.x_change == 0 and player.y_change == -20 and ((list(map(add, player.position[-1], [0, -20])) in player.position) or
-            # player.position[-1][-1] - 20 < 20)) or (player.x_change == 0 and player.y_change == 20 and ((list(map(add, player.position[-1], [0, 20])) in player.position) or
-            # player.position[-1][-1] + 20 >= (game.game_height-20))),  # danger straight
-            #
-            # (player.x_change == 0 and player.y_change == -20 and ((list(map(add,player.position[-1],[20, 0])) in player.position) or
-            # player.position[ -1][0] + 20 > (game.game_width-20))) or (player.x_change == 0 and player.y_change == 20 and ((list(map(add,player.position[-1],
-            # [-20,0])) in player.position) or player.position[-1][0] - 20 < 20)) or (player.x_change == -20 and player.y_change == 0 and ((list(map(
-            # add,player.position[-1],[0,-20])) in player.position) or player.position[-1][-1] - 20 < 20)) or (player.x_change == 20 and player.y_change == 0 and (
-            # (list(map(add,player.position[-1],[0,20])) in player.position) or player.position[-1][
-            #  -1] + 20 >= (game.game_height-20))),  # danger right
-            #
-            #  (player.x_change == 0 and player.y_change == 20 and ((list(map(add,player.position[-1],[20,0])) in player.position) or
-            #  player.position[-1][0] + 20 > (game.game_width-20))) or (player.x_change == 0 and player.y_change == -20 and ((list(map(
-            #  add, player.position[-1],[-20,0])) in player.position) or player.position[-1][0] - 20 < 20)) or (player.x_change == 20 and player.y_change == 0 and (
-            # (list(map(add,player.position[-1],[0,-20])) in player.position) or player.position[-1][-1] - 20 < 20)) or (
-            # player.x_change == -20 and player.y_change == 0 and ((list(map(add,player.position[-1],[0,20])) in player.position) or
-            # player.position[-1][-1] + 20 >= (game.game_height-20))), #danger left
+            game.check_collision(left),
+            game.check_collision(right),
+            game.check_collision(straight),
 
-            game.direction == (-1, 0),  # moving left
-            game.direction == (1, 0),  # moving right
-            game.direction == (0, 1),  # moving up
-            game.direction == (0, -1),  # moving down
+            game.direction == game.left,  # moving left
+            game.direction == game.right,  # moving right
+            game.direction == game.up,  # moving up
+            game.direction == game.down,  # moving down
 
 
             game.food[0] < head_x,  # food left
             game.food[0] > head_x,  # food right
-            game.food[1] < head_y,  # food up
-            game.food[1] > head_y  # food down
+            game.food[1] > head_y,  # food up
+            game.food[1] < head_y  # food down
             ]
 
         for i in range(len(state)):
