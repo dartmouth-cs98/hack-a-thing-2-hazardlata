@@ -1,6 +1,10 @@
 from cs1lib import *
 from random import randint
 from time import sleep
+from snakeAI import SnakeAgent
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 class Snake:
     def __init__(self, width, height, p_width, p_height):
@@ -23,6 +27,7 @@ class Snake:
         # snake components
         self.snake = [self.generate_random_coordinate()]                                # array of snake (x, y) coordinates for each block of the snake
         self.direction = None                                                       # x, y where (0, 1) is up, (0, -1) is down, (1, 0) is right, and (0, 1) is left
+        self.directions = [(0, 1), (0, -1), (1, 0), (0, 1)]
         self.score = 0
         self.turns = 0
         self.food = self.spawn_new_food()
@@ -75,7 +80,7 @@ class Snake:
         return self.snake[0] == self.food
 
     # updates snake
-    def update(self):
+    def update(self, machine, learning, dir=None):
         # if the snake ate, elongate him/her and spawn new food
         if self.snake_ate():
             self.score += 1
@@ -84,6 +89,8 @@ class Snake:
         # if not, just move the snake around
         else:
             # calculate where new head will be
+            if machine:
+                self.direction = self.directions[dir]
             new_head_coordinates = self.add_vectors(self.snake[0], self.direction)
 
             # insert new head_coordinates into beginning of list
@@ -93,14 +100,16 @@ class Snake:
             self.snake.pop()
 
             if self.check_collision():
-                print("Collision")
-                print(self.snake[0])
+                if not learning: # only draw if not learning
+                    print("Collision")
+                    print(self.snake[0])
 
-                set_clear_color(1, 1, 1)
-                clear()
-                set_stroke_color(0, 0, 0)
-                set_font_size(100)
-                draw_text(str(self.score), self.board_width // 2, self.board_height // 2)
+                    set_clear_color(1, 1, 1)
+                    clear()
+                    set_stroke_color(0, 0, 0)
+                    set_font_size(100)
+                    draw_text(str(self.score), self.board_width // 2, self.board_height // 2)
+
                 self.start = False
                 self.end = True
 
@@ -186,17 +195,24 @@ class Snake:
 
             # only updates once game is ready to be played
             if self.start:
-                self.update()
+                self.update(False)
 
     # displays everything
     def display(self):
         start_graphics(self.play, framerate=10, width=self.board_width, height=self.board_height, key_press=self.pressed)
 
-snake = Snake(20, 20, 1000, 1000)
-snake.display()
+# snake = Snake(20, 20, 1000, 1000)
+# snake.display()
 
+def plot_seaborn(array_counter, array_score):
+    sns.set(color_codes=True)
+    ax = sns.regplot(np.array([array_counter])[0], np.array([array_score])[0], color="b", x_jitter=.1, line_kws={'color':'green'})
+    ax.set(xlabel='games', ylabel='score')
+    plt.show()
+
+# based on code from https://github.com/maurock/snake-ga/blob/master/snakeClass.py
 def run(num_games):
-    agent = DQNAgent()
+    agent = SnakeAgent()
     counter_games = 0
     score_plot = []
     counter_plot =[]
@@ -215,46 +231,25 @@ def run(num_games):
 
             #perform random actions based on agent.epsilon, or choose the action
             if randint(0, 200) < agent.epsilon:
-                final_move = to_categorical(randint(0, 3), num_classes=4)
+                final_move = randint(0, 3)
             else:
                 # predict action based on the old state
-                prediction = agent.model.predict(state_old.reshape((1,11)))
-                final_move = to_categorical(np.argmax(prediction[0]), num_classes=4)
-
-            ####
-            # if the snake ate, elongate him/her and spawn new food
-            if game.snake_ate():
-                game.score += 1
-                game.snake.insert(0, game.food)
-                game.food = game.spawn_new_food()
-            # if not, just move the snake around
-            else:
-                # calculate where new head will be
-                new_head_coordinates = game.add_vectors(game.snake[0], game.direction)
-
-                # insert new head_coordinates into beginning of list
-                game.snake.insert(0, new_head_coordinates)
-
-                # pop tail
-                game.snake.pop()
-
-                if game.check_collision():
-                    game.start = False
-                    game.end = True
-            ####
+                prediction = agent.model.predict(state_old.reshape((1,8)))
+                final_move = np.argmax(prediction[0])
 
             #perform new move and get new state
+            game.update(True, True, final_move)
             state_new = agent.get_state(game)
 
             #set treward for the new state
-            reward = agent.set_reward(game, game.end)
+            reward = agent.set_reward(game)
 
             #train short memory base on the new action and state
             agent.train_short_memory(state_old, final_move, reward, state_new, game.end)
 
             # store the new data into a long term memory
             agent.remember(state_old, final_move, reward, state_new, game.end)
-            record = get_record(game.score, record)
+            record = max(game.score, record)
 
         agent.replay_new(agent.memory)
         counter_games += 1
@@ -264,4 +259,6 @@ def run(num_games):
     agent.model.save_weights('weights.hdf5')
     plot_seaborn(counter_plot, score_plot)
 
-run(150)
+run(10)
+# snake = Snake(20, 20, 600, 600)
+# snake.display()
